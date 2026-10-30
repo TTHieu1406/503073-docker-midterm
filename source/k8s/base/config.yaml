@@ -1,0 +1,16 @@
+# Non-secret settings. Passwords live in the `dockmart-secrets` Secret, which is
+# created from ./secrets with kubectl (see the README), never committed as YAML.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dockmart-config
+data:
+  DB_HOST: postgres
+  DB_USER: dockmart
+  DB_NAME: dockmart
+  DB_PASSWORD_FILE: /run/secrets/db_password
+  REDIS_HOST: redis
+  REDIS_PASSWORD_FILE: /run/secrets/redis_password
+  JWT_SECRET_FILE: /run/secrets/jwt_secret
+  ADMIN_PASSWORD_FILE: /run/secrets/admin_password
+  ENABLE_DEMO_ENDPOINTS: "true"

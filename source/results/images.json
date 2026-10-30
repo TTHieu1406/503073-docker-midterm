@@ -1,0 +1,74 @@
+[
+  {
+    "strategy": "naive",
+    "coldBuildSeconds": 16.5,
+    "rebuildSeconds": 4.1,
+    "sizeMB": 1717.7,
+    "layers": 11,
+    "user": "root",
+    "hasShell": true,
+    "vulnerabilities": {
+      "Critical": 57,
+      "High": 373,
+      "Medium": 727,
+      "Low": 251,
+      "Negligible": 1008,
+      "Unknown": 41
+    },
+    "downloadMB": 427.6
+  },
+  {
+    "strategy": "slim",
+    "coldBuildSeconds": 12.8,
+    "rebuildSeconds": 3.6,
+    "sizeMB": 393.1,
+    "layers": 10,
+    "user": "node",
+    "hasShell": true,
+    "vulnerabilities": {
+      "Critical": 2,
+      "High": 76,
+      "Medium": 82,
+      "Low": 14,
+      "Negligible": 65,
+      "Unknown": 0
+    },
+    "downloadMB": 93.7
+  },
+  {
+    "strategy": "distroless",
+    "coldBuildSeconds": 26.3,
+    "rebuildSeconds": 1.7,
+    "sizeMB": 259.3,
+    "layers": 27,
+    "user": "65532",
+    "hasShell": false,
+    "vulnerabilities": {
+      "Critical": 0,
+      "High": 11,
+      "Medium": 10,
+      "Low": 3,
+      "Negligible": 7,
+      "Unknown": 0
+    },
+    "downloadMB": 61.5
+  },
+  {
+    "strategy": "multi-stage alpine",
+    "coldBuildSeconds": 13.6,
+    "rebuildSeconds": 2.9,
+    "sizeMB": 288.1,
+    "layers": 9,
+    "user": "node",
+    "hasShell": true,
+    "vulnerabilities": {
+      "Critical": 0,
+      "High": 6,
+      "Medium": 13,
+      "Low": 1,
+      "Negligible": 0,
+      "Unknown": 0
+    },
+    "downloadMB": 68.5
+  }
+]

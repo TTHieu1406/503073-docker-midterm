@@ -1,0 +1,278 @@
+# DockMart: production-like stack.
+#
+#   docker compose up -d --build                    start everything
+#   docker compose up -d --scale api=5              change the number of replicas
+#   docker compose --profile monitoring up -d       add Prometheus and Grafana
+#   docker compose --profile test run --rm smoke    run the end-to-end checks
+#
+# Development with hot reload: docker compose -f compose.yaml -f compose.dev.yaml watch
+
+name: dockmart
+
+# Reusable fragments (YAML anchors). Compose ignores top-level keys starting with x-.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-hardening: &hardening
+  read_only: true                     # the image cannot be modified at run time
+  cap_drop: [ALL]                     # no Linux capabilities at all
+  security_opt: [no-new-privileges:true]
+  tmpfs: [/tmp]                       # the only writable path
+  restart: unless-stopped
+  logging: *logging
+
+x-backend: &backend
+  <<: *hardening
+  build:
+    context: ./backend
+    target: production
+    args:
+      APP_VERSION: ${APP_VERSION:-1.0.0}
+  image: dockmart/backend:${APP_VERSION:-1.0.0}
+  init: true                          # reaps zombies and forwards signals
+  environment: &backend-env
+    APP_VERSION: ${APP_VERSION:-1.0.0}
+    DB_HOST: postgres
+    DB_USER: dockmart
+    DB_NAME: dockmart
+    DB_PASSWORD_FILE: /run/secrets/db_password
+    REDIS_HOST: redis
+    REDIS_PASSWORD_FILE: /run/secrets/redis_password
+    JWT_SECRET_FILE: /run/secrets/jwt_secret
+    ADMIN_PASSWORD_FILE: /run/secrets/admin_password
+    ENABLE_DEMO_ENDPOINTS: "true"
+  secrets: [db_password, redis_password, jwt_secret, admin_password]
+
+services:
+  # Single public entry point: reverse proxy, load balancer, rate limiter.
+  gateway:
+    <<: *hardening
+    build: ./gateway
+    image: dockmart/gateway:${APP_VERSION:-1.0.0}
+    ports:
+      - "${HTTP_PORT:-8080}:8080"
+    tmpfs:
+      - /tmp
+      - /etc/nginx/conf.d:uid=101,gid=101   # receives the rendered template
+    depends_on:
+      api: { condition: service_healthy }
+      web: { condition: service_healthy }
+    networks: [edge]
+    deploy:
+      resources:
+        limits: { cpus: "0.50", memory: 64M }
+
+  # Static React build served by an unprivileged Nginx.
+  web:
+    <<: *hardening
+    build:
+      context: ./web
+      target: production
+    image: dockmart/web:${APP_VERSION:-1.0.0}
+    networks: [edge]
+    deploy:
+      resources:
+        limits: { cpus: "0.25", memory: 32M }
+
+  # Stateless REST API: scale it freely, no sticky sessions needed.
+  api:
+    <<: *backend
+    command: ["node", "src/server.js"]
+    stop_grace_period: 20s
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:4000/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks: [edge, backend, observability]
+    deploy:
+      replicas: 3
+      resources:
+        limits: { cpus: "0.50", memory: 256M }
+        reservations: { cpus: "0.10", memory: 96M }
+
+  # Same image as the API, different command: background order processing.
+  worker:
+    <<: *backend
+    command: ["node", "src/worker.js"]
+    stop_grace_period: 30s
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:4001/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks: [backend, observability]
+    deploy:
+      replicas: 2
+      resources:
+        limits: { cpus: "0.50", memory: 256M }
+
+  # One-shot job: applies the schema, then exits. The API waits for it to succeed.
+  migrate:
+    <<: *backend
+    command: ["node", "src/migrate.js"]
+    restart: "no"
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres: { condition: service_healthy }
+    networks: [backend]
+
+  postgres:
+    image: postgres:18.6-alpine
+    restart: unless-stopped
+    logging: *logging
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    # Only what the entrypoint needs to prepare the data directory and drop to `postgres`.
+    cap_add: [CHOWN, DAC_READ_SEARCH, FOWNER, SETGID, SETUID]
+    environment:
+      POSTGRES_USER: dockmart
+      POSTGRES_DB: dockmart
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets: [db_password]
+    volumes:
+      - postgres-data:/var/lib/postgresql   # PostgreSQL 18 keeps PGDATA under a versioned folder
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dockmart -d dockmart"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks: [backend]
+    deploy:
+      resources:
+        limits: { cpus: "1.00", memory: 512M }
+
+  # Cache, job queue (BullMQ) and pub/sub between replicas.
+  redis:
+    image: redis:8.10.3-alpine
+    restart: unless-stopped
+    logging: *logging
+    user: redis
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    secrets: [redis_password]
+    command:
+      - sh
+      - -c
+      - exec redis-server --appendonly yes --maxmemory-policy noeviction --requirepass "$$(cat /run/secrets/redis_password)"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$(cat /run/secrets/redis_password)\" --no-auth-warning ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [backend]
+    deploy:
+      resources:
+        limits: { cpus: "0.50", memory: 256M }
+
+  # --- profile: monitoring --------------------------------------------------
+  prometheus:
+    profiles: [monitoring]
+    image: prom/prometheus:v3.15.1
+    restart: unless-stopped
+    logging: *logging
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=2d
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    networks: [observability, ops]
+
+  grafana:
+    profiles: [monitoring]
+    image: grafana/grafana:13.3.0
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/admin_password
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    secrets: [admin_password]
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on: [prometheus]
+    networks: [ops]
+
+  # --- profile: test --------------------------------------------------------
+  smoke:
+    profiles: [test]
+    image: node:24.22.2-alpine3.24
+    working_dir: /tests
+    command: ["node", "--test", "smoke.test.mjs"]
+    environment:
+      BASE_URL: http://gateway:8080
+      ADMIN_EMAIL: admin@dockmart.local
+      ADMIN_PASSWORD_FILE: /run/secrets/admin_password
+    secrets: [admin_password]
+    volumes:
+      - ./tests/smoke:/tests:ro
+    depends_on:
+      gateway: { condition: service_healthy }
+    networks: [edge]
+
+  # --- profile: load --------------------------------------------------------
+  k6:
+    profiles: [load]
+    image: grafana/k6:2.3.0
+    environment:
+      BASE_URL: http://gateway:8080
+    volumes:
+      - ./tests/load:/scripts:ro
+    networks: [edge]
+
+networks:
+  # Reachable by the gateway. Nothing here can talk to the databases directly.
+  edge:
+  # `internal` has no route to the Internet: the databases can neither be reached
+  # from the outside nor send data out.
+  backend:
+    internal: true
+  # Lets Prometheus scrape the replicas. Also internal, so that joining it does not
+  # give a worker a way out to the Internet.
+  observability:
+    internal: true
+  # Publishes the Prometheus and Grafana ports to the host.
+  ops:
+
+volumes:
+  postgres-data:
+  redis-data:
+  prometheus-data:
+  grafana-data:
+
+# Compose mounts these at /run/secrets/<name>. The values in ./secrets are demo-only.
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  redis_password:
+    file: ./secrets/redis_password.txt
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
+  admin_password:
+    file: ./secrets/admin_password.txt

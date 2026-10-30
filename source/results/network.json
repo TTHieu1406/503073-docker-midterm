@@ -1,0 +1,44 @@
+{
+  "gateway": {
+    "web": true,
+    "api": true,
+    "postgres": false,
+    "redis": false,
+    "internet": true
+  },
+  "web": {
+    "web": true,
+    "api": true,
+    "postgres": false,
+    "redis": false,
+    "internet": true
+  },
+  "api": {
+    "web": true,
+    "api": true,
+    "postgres": true,
+    "redis": true,
+    "internet": true
+  },
+  "worker": {
+    "web": false,
+    "api": true,
+    "postgres": true,
+    "redis": true,
+    "internet": false
+  },
+  "postgres": {
+    "web": false,
+    "api": true,
+    "postgres": true,
+    "redis": true,
+    "internet": false
+  },
+  "redis": {
+    "web": false,
+    "api": true,
+    "postgres": true,
+    "redis": true,
+    "internet": false
+  }
+}

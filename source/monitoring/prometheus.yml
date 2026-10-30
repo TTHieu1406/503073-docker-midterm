@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  # Docker's DNS returns one A record per replica, so scaled replicas are found
+  # automatically, without editing this file.
+  - job_name: api
+    dns_sd_configs:
+      - names: [api]
+        type: A
+        port: 4000
+        refresh_interval: 5s
+
+  - job_name: worker
+    dns_sd_configs:
+      - names: [worker]
+        type: A
+        port: 4001
+        refresh_interval: 5s

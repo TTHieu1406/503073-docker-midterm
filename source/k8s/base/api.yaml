@@ -1,0 +1,117 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  labels: { app: api }
+spec:
+  selector: { app: api }
+  ports:
+    - port: 4000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  labels: { app: api }
+spec:
+  replicas: 3
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1            # start one new pod at a time...
+      maxUnavailable: 0      # ...and never drop below the desired count
+  selector:
+    matchLabels: { app: api }
+  template:
+    metadata:
+      labels: { app: api, tier: backend }
+    spec:
+      automountServiceAccountToken: false   # these pods never call the Kubernetes API
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile: { type: RuntimeDefault }
+      # Keep replicas on different nodes, so one node failure cannot take them all.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: { app: api }
+      containers:
+        - name: api
+          image: dockmart/backend:1.0.0
+          imagePullPolicy: IfNotPresent
+          command: ["node", "src/server.js"]
+          ports:
+            - containerPort: 4000
+          envFrom:
+            - configMapRef: { name: dockmart-config }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          # Failing liveness restarts the container, failing readiness only removes
+          # it from the Service. Compose has no equivalent of either behaviour.
+          livenessProbe:
+            httpGet: { path: /health/live, port: 4000 }
+            periodSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet: { path: /health/ready, port: 4000 }
+            periodSeconds: 3
+            failureThreshold: 2
+          lifecycle:
+            preStop:
+              # Endpoint removal takes a moment to reach every node. Keep serving
+              # until it has, and only then let SIGTERM start the shutdown.
+              exec:
+                command: ["sleep", "5"]
+          resources:
+            requests: { cpu: 200m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          volumeMounts:
+            - { name: secrets, mountPath: /run/secrets, readOnly: true }
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: secrets
+          secret:
+            secretName: dockmart-secrets
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api
+  minReplicas: 3
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+    scaleDown:
+      stabilizationWindowSeconds: 30
+---
+# Voluntary disruptions, such as draining a node, must leave two replicas running.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels: { app: api }

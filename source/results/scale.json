@@ -1,0 +1,194 @@
+[
+  {
+    "replicas": 1,
+    "rps": 107.4,
+    "p95Ms": 506.9,
+    "failedRate": 0,
+    "runs": [
+      {
+        "requests": 2022,
+        "rps": 98.7,
+        "avgMs": 480.2,
+        "p95Ms": 589.2,
+        "p99Ms": 704.6,
+        "failedRate": 0
+      },
+      {
+        "requests": 2199,
+        "rps": 107.7,
+        "avgMs": 441,
+        "p95Ms": 506.9,
+        "p99Ms": 596.5,
+        "failedRate": 0
+      },
+      {
+        "requests": 2193,
+        "rps": 107.4,
+        "avgMs": 441.9,
+        "p95Ms": 506.7,
+        "p99Ms": 562.6,
+        "failedRate": 0
+      }
+    ]
+  },
+  {
+    "replicas": 2,
+    "rps": 204.6,
+    "p95Ms": 484.9,
+    "failedRate": 0,
+    "runs": [
+      {
+        "requests": 3938,
+        "rps": 193,
+        "avgMs": 246.1,
+        "p95Ms": 550.8,
+        "p99Ms": 627.9,
+        "failedRate": 0
+      },
+      {
+        "requests": 4179,
+        "rps": 204.6,
+        "avgMs": 231.6,
+        "p95Ms": 484.9,
+        "p99Ms": 589.5,
+        "failedRate": 0
+      },
+      {
+        "requests": 4308,
+        "rps": 211.2,
+        "avgMs": 224.5,
+        "p95Ms": 456.7,
+        "p99Ms": 487.7,
+        "failedRate": 0
+      }
+    ]
+  },
+  {
+    "replicas": 3,
+    "rps": 296.3,
+    "p95Ms": 413.3,
+    "failedRate": 0,
+    "runs": [
+      {
+        "requests": 5268,
+        "rps": 257.8,
+        "avgMs": 183.8,
+        "p95Ms": 599.4,
+        "p99Ms": 724.7,
+        "failedRate": 0
+      },
+      {
+        "requests": 6011,
+        "rps": 296.3,
+        "avgMs": 160.3,
+        "p95Ms": 293.8,
+        "p99Ms": 331.9,
+        "failedRate": 0
+      },
+      {
+        "requests": 6159,
+        "rps": 303.8,
+        "avgMs": 156.7,
+        "p95Ms": 413.3,
+        "p99Ms": 490.5,
+        "failedRate": 0
+      }
+    ]
+  },
+  {
+    "replicas": 4,
+    "rps": 367.2,
+    "p95Ms": 479.5,
+    "failedRate": 0,
+    "runs": [
+      {
+        "requests": 7341,
+        "rps": 359.7,
+        "avgMs": 131.8,
+        "p95Ms": 518.6,
+        "p99Ms": 642.8,
+        "failedRate": 0
+      },
+      {
+        "requests": 7825,
+        "rps": 385.9,
+        "avgMs": 123.2,
+        "p95Ms": 286.6,
+        "p99Ms": 346.1,
+        "failedRate": 0
+      },
+      {
+        "requests": 7499,
+        "rps": 367.2,
+        "avgMs": 128.8,
+        "p95Ms": 479.5,
+        "p99Ms": 546.3,
+        "failedRate": 0
+      }
+    ]
+  },
+  {
+    "replicas": 5,
+    "rps": 451.1,
+    "p95Ms": 482.9,
+    "failedRate": 0,
+    "runs": [
+      {
+        "requests": 8944,
+        "rps": 439.1,
+        "avgMs": 108.1,
+        "p95Ms": 511.1,
+        "p99Ms": 641.5,
+        "failedRate": 0
+      },
+      {
+        "requests": 9463,
+        "rps": 465.7,
+        "avgMs": 101.8,
+        "p95Ms": 363.7,
+        "p99Ms": 399.1,
+        "failedRate": 0
+      },
+      {
+        "requests": 9176,
+        "rps": 451.1,
+        "avgMs": 105.2,
+        "p95Ms": 482.9,
+        "p99Ms": 551.3,
+        "failedRate": 0
+      }
+    ]
+  },
+  {
+    "replicas": 6,
+    "rps": 510.2,
+    "p95Ms": 284.5,
+    "failedRate": 0,
+    "runs": [
+      {
+        "requests": 10399,
+        "rps": 510.2,
+        "avgMs": 92.9,
+        "p95Ms": 525.3,
+        "p99Ms": 601.6,
+        "failedRate": 0
+      },
+      {
+        "requests": 10511,
+        "rps": 518.8,
+        "avgMs": 91.6,
+        "p95Ms": 284.5,
+        "p99Ms": 313.6,
+        "failedRate": 0
+      },
+      {
+        "requests": 10366,
+        "rps": 506,
+        "avgMs": 93.4,
+        "p95Ms": 275.1,
+        "p99Ms": 494.1,
+        "failedRate": 0
+      }
+    ]
+  }
+]

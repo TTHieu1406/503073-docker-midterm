@@ -1,0 +1,7 @@
+# Keep Linux line endings on every system: these files run inside Linux containers.
+* text=auto eol=lf
+*.docx binary
+*.pptx binary
+*.pdf binary
+*.png binary
+*.dotx binary

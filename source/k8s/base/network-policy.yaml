@@ -1,0 +1,45 @@
+# The same segmentation as the Compose networks: everything is denied, then only
+# the arrows from the architecture diagram are allowed.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gateway-from-anywhere
+spec:
+  podSelector:
+    matchLabels: { app: gateway }
+  ingress:
+    - ports:
+        - port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-and-web-from-gateway
+spec:
+  podSelector:
+    matchExpressions:
+      - { key: app, operator: In, values: [api, web] }
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { app: gateway }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: data-from-backend
+spec:
+  podSelector:
+    matchLabels: { tier: data }
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { tier: backend }

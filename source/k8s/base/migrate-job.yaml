@@ -1,0 +1,35 @@
+# Equivalent of the `migrate` Compose service. If Postgres is not ready yet the pod
+# fails and the Job simply retries it.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+spec:
+  backoffLimit: 12
+  template:
+    metadata:
+      labels: { app: migrate, tier: backend }
+    spec:
+      automountServiceAccountToken: false   # these pods never call the Kubernetes API
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: migrate
+          image: dockmart/backend:1.0.0
+          imagePullPolicy: IfNotPresent
+          command: ["node", "src/migrate.js"]
+          envFrom:
+            - configMapRef: { name: dockmart-config }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          volumeMounts:
+            - { name: secrets, mountPath: /run/secrets, readOnly: true }
+      volumes:
+        - name: secrets
+          secret:
+            secretName: dockmart-secrets

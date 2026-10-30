@@ -1,0 +1,65 @@
+{
+  "baseline": {
+    "k6": {
+      "requests": 4001,
+      "failed": 0,
+      "failedRate": 0,
+      "p95Ms": 2,
+      "maxMs": 4.6
+    },
+    "detail": null
+  },
+  "crash": {
+    "k6": {
+      "requests": 4001,
+      "failed": 0,
+      "failedRate": 0,
+      "p95Ms": 2.1,
+      "maxMs": 118.2
+    },
+    "detail": {
+      "recoverySeconds": 6.6,
+      "healthy": true
+    }
+  },
+  "gracefulStop": {
+    "k6": {
+      "requests": 4001,
+      "failed": 0,
+      "failedRate": 0,
+      "p95Ms": 2.2,
+      "maxMs": 63.7
+    },
+    "detail": {
+      "stopSeconds": 0.7
+    }
+  },
+  "dockerKill": {
+    "k6": {
+      "requests": 4001,
+      "failed": 0,
+      "failedRate": 0,
+      "p95Ms": 2.1,
+      "maxMs": 72.5
+    },
+    "detail": {
+      "statusAfterKill": "exited",
+      "container": "5bea0cd72d4f749609cc5a5ebcf62d357d08b7271dd13908dedc4f0f72f36045"
+    }
+  },
+  "workerCrash": {
+    "status": "shipped",
+    "crashedWorker": "2acedd2255c8",
+    "finishedBy": "2acedd2255c8",
+    "secondsAfterCrash": 9.8
+  },
+  "redisOutage": {
+    "catalogStatus": 200,
+    "catalogCacheHeader": "BYPASS",
+    "catalogMs": 28,
+    "products": 13,
+    "sessionStatus": 200,
+    "orderDuringOutage": 503,
+    "orderAfterRecovery": 201
+  }
+}

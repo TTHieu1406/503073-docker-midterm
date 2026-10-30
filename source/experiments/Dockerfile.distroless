@@ -1,0 +1,15 @@
+# Experiment: distroless runtime. No shell and no package manager in the final image.
+FROM node:24-slim AS build
+ENV NODE_ENV=production
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --no-audit --no-fund
+
+FROM gcr.io/distroless/nodejs24-debian13:nonroot
+ENV NODE_ENV=production
+WORKDIR /app
+COPY --from=build /app/node_modules ./node_modules
+COPY package.json ./
+COPY src ./src
+COPY migrations ./migrations
+CMD ["src/server.js"]

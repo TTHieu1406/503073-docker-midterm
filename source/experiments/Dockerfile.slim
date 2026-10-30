@@ -1,0 +1,10 @@
+# Experiment: Debian slim base, production dependencies, good layer order.
+FROM node:24-slim
+ENV NODE_ENV=production
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --no-audit --no-fund
+COPY src ./src
+COPY migrations ./migrations
+USER node
+CMD ["node", "src/server.js"]

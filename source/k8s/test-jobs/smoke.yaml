@@ -1,0 +1,30 @@
+# Runs tests/smoke/smoke.test.mjs inside the cluster. Prepare it with:
+#   kubectl -n dockmart create configmap smoke-tests --from-file=tests/smoke/smoke.test.mjs
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smoke
+  namespace: dockmart
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      containers:
+        - name: smoke
+          image: node:24.22.2-alpine3.24
+          workingDir: /tests
+          command: ["node", "--test", "smoke.test.mjs"]
+          env:
+            - { name: BASE_URL, value: "http://gateway:8080" }
+            - { name: ADMIN_PASSWORD_FILE, value: /run/secrets/admin_password }
+          volumeMounts:
+            - { name: tests, mountPath: /tests }
+            - { name: secrets, mountPath: /run/secrets, readOnly: true }
+      volumes:
+        - name: tests
+          configMap: { name: smoke-tests }
+        - name: secrets
+          secret: { secretName: dockmart-secrets }

@@ -1,0 +1,34 @@
+# Runs a k6 script from inside the cluster. Prepare it with:
+#   kubectl -n dockmart create configmap load-tests --from-file=tests/load/
+# Choose the script and settings by editing `args` and `env`.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k6
+  namespace: dockmart
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      # Stay on the control plane, so that draining a worker cannot evict the load
+      # generator and its load does not compete with the pods being measured.
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      tolerations:
+        - { key: node-role.kubernetes.io/control-plane, operator: Exists, effect: NoSchedule }
+      containers:
+        - name: k6
+          image: grafana/k6:2.3.0
+          args: ["run", "--quiet", "/scripts/availability.js"]
+          env:
+            - { name: BASE_URL, value: "http://gateway:8080" }
+            - { name: RATE, value: "100" }
+            - { name: DURATION, value: "75s" }
+          volumeMounts:
+            - { name: scripts, mountPath: /scripts }
+      volumes:
+        - name: scripts
+          configMap: { name: load-tests }

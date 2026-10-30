@@ -1,0 +1,76 @@
+{
+  "containerRunSeconds": 0.66,
+  "fullStackSeconds": 26.1,
+  "scaleUpSeconds": 9.0,
+  "raw": {
+    "overhead": [
+      0.5843947000103071,
+      0.6645067000063136,
+      0.6556509000365622,
+      0.7347377999685705,
+      0.6150772999972105,
+      0.6638496000086889,
+      0.839370500005316,
+      0.7727346000028774,
+      0.645923700009007,
+      0.6000208000186831
+    ],
+    "full": [
+      25.82809929997893,
+      26.741124099993613,
+      26.109845800034236
+    ],
+    "scale": [
+      9.024744800000917,
+      9.25601169996662,
+      8.91533269995125
+    ]
+  },
+  "idleUsage": [
+    {
+      "name": "dockmart-gateway-1",
+      "memory": "4.004MiB / 64MiB",
+      "cpu": "0.00%"
+    },
+    {
+      "name": "dockmart-worker-2",
+      "memory": "35.47MiB / 256MiB",
+      "cpu": "0.76%"
+    },
+    {
+      "name": "dockmart-api-3",
+      "memory": "38.56MiB / 256MiB",
+      "cpu": "0.48%"
+    },
+    {
+      "name": "dockmart-api-2",
+      "memory": "37.88MiB / 256MiB",
+      "cpu": "0.64%"
+    },
+    {
+      "name": "dockmart-worker-1",
+      "memory": "35.9MiB / 256MiB",
+      "cpu": "0.53%"
+    },
+    {
+      "name": "dockmart-api-1",
+      "memory": "38.03MiB / 256MiB",
+      "cpu": "0.65%"
+    },
+    {
+      "name": "dockmart-web-1",
+      "memory": "3.523MiB / 32MiB",
+      "cpu": "0.00%"
+    },
+    {
+      "name": "dockmart-postgres-1",
+      "memory": "27.59MiB / 512MiB",
+      "cpu": "0.03%"
+    },
+    {
+      "name": "dockmart-redis-1",
+      "memory": "5.777MiB / 256MiB",
+      "cpu": "0.31%"
+    }
+  ]
+}

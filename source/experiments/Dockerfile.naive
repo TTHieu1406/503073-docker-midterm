@@ -1,0 +1,7 @@
+# Experiment: the "first Dockerfile" many tutorials show. Do not use this.
+# Runs as root, ships devDependencies, and any source change reinstalls everything.
+FROM node:24
+WORKDIR /app
+COPY . .
+RUN npm install
+CMD ["node", "src/server.js"]

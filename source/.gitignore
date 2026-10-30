@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+
+# Real deployments must never commit secrets. The demo values in secrets/ are kept
+# so that a grader can start the project with one command; delete this comment and
+# uncomment the next line for anything real.
+# secrets/

@@ -1,5 +1,5 @@
-# Pipeline for a GitHub repository. Not executed during the coursework, because the
-# project was not pushed to GitHub. The same steps were run by hand (see the README).
+# Pipeline for a GitHub repository whose root is this folder. It was not executed during
+# the coursework. The same steps were run by hand (see the README).
 name: ci
 
 on:

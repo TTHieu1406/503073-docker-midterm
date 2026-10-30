@@ -14,16 +14,7 @@ DockMart is a small online store split into containers. The store itself is ordi
 how it runs: replicas you can scale while it serves traffic, a live **Ops Center** where you can kill containers and
 watch them recover, and the same images running unchanged on Docker Compose and on a three-node Kubernetes cluster.
 
-```text
-                     ┌────────────────────── edge network ──────────────────────┐
- Browser ─ :8080 ──► │  gateway (Nginx)  ──►  web (React + Nginx)               │
-                     │    load balancing ──►  api × 3 (Node.js + Express)       │
-                     └───────────────────────────┬──────────────────────────────┘
-                     ┌────────────────── backend network (internal) ────────────┐
-                     │  postgres (data)    redis (cache, queue, pub/sub)        │
-                     │  worker × 2 (order processing)    migrate (one-shot job) │
-                     └──────────────────────────────────────────────────────────┘
-```
+![DockMart architecture](docs/images/architecture.png)
 
 ## 1. System requirements
 
